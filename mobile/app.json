@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "HealthPredict",
+    "slug": "healthpredict",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "healthpredict",
+    "userInterfaceStyle": "light",
+    "description": "Cardiovascular Risk Prediction, Wellness Tracking & Medication Management",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.healthpredict.app"
+    },
+    "android": {
+      "package": "com.healthpredict.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F766E",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0F766E"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F766E",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 140
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}

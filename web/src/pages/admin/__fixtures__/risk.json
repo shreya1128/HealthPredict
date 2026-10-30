@@ -1,0 +1,17 @@
+{
+ "members_with_assessment": 3,
+ "members_without_assessment": 0,
+ "rule_based": {
+  "LOW": 1,
+  "MODERATE": 2,
+  "HIGH": 0
+ },
+ "average_health_score": 73.3,
+ "ml": {
+  "LOW": 1,
+  "MODERATE": 0,
+  "HIGH": 1
+ },
+ "members_with_ml_prediction": 2,
+ "average_ml_probability": 0.5181
+}

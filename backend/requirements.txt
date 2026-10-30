@@ -1,0 +1,38 @@
+# Versions below are the ones the backend was actually installed and tested with.
+# ML inference libraries (scikit-learn, joblib, pandas, numpy, shap) are added in Phase 5,
+# once the trained model exists and they have been tested together.
+
+# Web framework
+fastapi==0.141.1
+starlette==1.7.0
+uvicorn==0.54.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+email-validator==2.3.0
+python-multipart==0.0.32
+
+
+# Database
+sqlalchemy==2.1.1
+pymysql==1.2.3
+
+# Security
+bcrypt==5.0.0
+PyJWT==2.15.1
+
+# Distributed rate limiting (optional; used when REDIS_URL is configured)
+redis==6.2.0
+
+# PDF reports (Phase 8)
+reportlab==4.4.10
+
+# ML inference (Phase 5: loading the trained model, computing SHAP explanations)
+joblib==1.5.3
+pandas==3.0.2
+scikit-learn==1.8.0
+shap==0.52.0
+numpy==2.4.4
+
+# Testing
+pytest==9.1.1
+httpx==0.28.1

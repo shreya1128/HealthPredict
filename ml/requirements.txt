@@ -1,0 +1,13 @@
+# Versions below are the ones the ML pipeline was actually installed and tested with in this
+# environment. XGBoost/LightGBM/SHAP are NOT included: the Gradient Boosting requirement is met
+# with scikit-learn's own GradientBoostingClassifier (see training/models.py for why), and SHAP
+# is added in Phase 5 when it is actually wired into the prediction service.
+
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.8.0
+matplotlib==3.10.8
+joblib==1.5.3
+
+# Testing
+pytest==9.1.1

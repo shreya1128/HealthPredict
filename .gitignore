@@ -1,0 +1,228 @@
+# ============================================================================
+# ENVIRONMENT & CONFIGURATION
+# ============================================================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets.yaml
+
+# ============================================================================
+# PYTHON & VIRTUAL ENVIRONMENTS
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================================================
+# NODE & WEB FRONTEND
+# ============================================================================
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.npm
+dist/
+.next/
+out/
+.nuxt
+.cache/
+.vuepress/dist/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ============================================================================
+# IDE & EDITOR
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-project
+*.sublime-workspace
+.code-workspace
+*.code-workspace
+*.iml
+.gradle
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# ============================================================================
+# DATABASE
+# ============================================================================
+*.sqlite
+*.sqlite3
+*.db
+*.mysql
+*.postgres
+database.db
+*.sql~
+
+# ============================================================================
+# UPLOADS & MEDIA
+# ============================================================================
+uploads/
+media/
+static/temp/
+public/uploads/
+/backend/uploads/
+
+# ============================================================================
+# BUILD & DIST
+# ============================================================================
+build/
+dist/
+*.tar.gz
+*.zip
+
+# ============================================================================
+# LOGS
+# ============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================================================
+# ML & DATA
+# ============================================================================
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.model
+*.weights
+data/
+datasets/
+ml/saved_models/*.pkl
+ml/saved_models/*.joblib
+*.csv~
+*.xlsx~
+
+# ============================================================================
+# OS SPECIFIC
+# ============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+[Dd]esktop.ini
+
+# ============================================================================
+# PACKAGE MANAGERS
+# ============================================================================
+
+# ============================================================================
+# TEMPORARY FILES
+# ============================================================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+\#*\#
+.\#*
+*.swp
+*.swo
+*~
+
+# ============================================================================
+# TESTING
+# ============================================================================
+.nyc_output/
+coverage/
+*.lcov
+.coverage
+htmlcov/
+.pytest_cache/
+.hypothesis/
+test-results/
+junit.xml
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+.dockerignore
+docker-compose.override.yml
+
+# ============================================================================
+# CERTIFICATES & CREDENTIALS
+# ============================================================================
+*.crt
+*.cert
+*.key
+*.pem
+*.pfx
+*.p12
+
+# ============================================================================
+# MISC
+# ============================================================================
+*.orig
+*.patch
+.ackrc
+.tool-versions
+.nvmrc
+.ruby-version
+.python-version
+.node-version

@@ -1,0 +1,54 @@
+{
+  "model_name": "gradient_boosting",
+  "trained_at_utc": "2026-09-30T21:43:39.638512+00:00",
+  "sklearn_pipeline_steps": [
+    "preprocess",
+    "model"
+  ],
+  "hyperparameters": {
+    "model__max_depth": 3,
+    "model__n_estimators": 100
+  },
+  "feature_columns": [
+    "age_years",
+    "height_cm",
+    "weight_kg",
+    "bmi",
+    "ap_hi",
+    "ap_lo",
+    "pulse_pressure",
+    "map_pressure",
+    "gender",
+    "cholesterol",
+    "gluc",
+    "smoke",
+    "alco",
+    "active"
+  ],
+  "target_column": "cardio",
+  "dataset_counts": {
+    "raw_rows": 70000,
+    "after_cleaning": 68598,
+    "after_bmi_filter": 68569
+  },
+  "train_rows": 54855,
+  "test_rows": 13714,
+  "screen_sample_size": 6000,
+  "tune_sample_size": 15000,
+  "tune_cv_roc_auc": 0.8002,
+  "test_metrics": {
+    "accuracy": 0.7343,
+    "precision": 0.7562,
+    "recall": 0.6833,
+    "f1_score": 0.7179,
+    "roc_auc": 0.8014,
+    "confusion_matrix": {
+      "true_negative": 5434,
+      "false_positive": 1495,
+      "false_negative": 2149,
+      "true_positive": 4636
+    }
+  },
+  "random_state": 42,
+  "training_duration_seconds": 21.9
+}

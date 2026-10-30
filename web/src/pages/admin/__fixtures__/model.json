@@ -1,0 +1,162 @@
+{
+ "available": true,
+ "serving_model_loaded": true,
+ "model_name": "gradient_boosting",
+ "trained_at_utc": "2026-09-30T21:43:39.638512+00:00",
+ "hyperparameters": {
+  "model__max_depth": 3,
+  "model__n_estimators": 100
+ },
+ "feature_columns": [
+  "age_years",
+  "height_cm",
+  "weight_kg",
+  "bmi",
+  "ap_hi",
+  "ap_lo",
+  "pulse_pressure",
+  "map_pressure",
+  "gender",
+  "cholesterol",
+  "gluc",
+  "smoke",
+  "alco",
+  "active"
+ ],
+ "dataset_counts": {
+  "raw_rows": 70000,
+  "after_cleaning": 68598,
+  "after_bmi_filter": 68569
+ },
+ "train_rows": 54855,
+ "test_rows": 13714,
+ "training_duration_seconds": 21.9,
+ "test_metrics": {
+  "accuracy": 0.7343,
+  "precision": 0.7562,
+  "recall": 0.6833,
+  "f1_score": 0.7179,
+  "roc_auc": 0.8014
+ },
+ "confusion_matrix": {
+  "true_negative": 5434,
+  "false_positive": 1495,
+  "false_negative": 2149,
+  "true_positive": 4636
+ },
+ "comparison": [
+  {
+   "name": "logistic_regression",
+   "metrics": {
+    "accuracy": {
+     "mean": 0.732,
+     "std": 0.0025
+    },
+    "precision": {
+     "mean": 0.753,
+     "std": 0.0121
+    },
+    "recall": {
+     "mean": 0.6831,
+     "std": 0.0152
+    },
+    "f1": {
+     "mean": 0.7161,
+     "std": 0.0033
+    },
+    "roc_auc": {
+     "mean": 0.792,
+     "std": 0.0061
+    }
+   }
+  },
+  {
+   "name": "decision_tree",
+   "metrics": {
+    "accuracy": {
+     "mean": 0.6423,
+     "std": 0.0066
+    },
+    "precision": {
+     "mean": 0.6399,
+     "std": 0.0038
+    },
+    "recall": {
+     "mean": 0.6339,
+     "std": 0.0204
+    },
+    "f1": {
+     "mean": 0.6367,
+     "std": 0.0116
+    },
+    "roc_auc": {
+     "mean": 0.6423,
+     "std": 0.0067
+    }
+   }
+  },
+  {
+   "name": "random_forest",
+   "metrics": {
+    "accuracy": {
+     "mean": 0.7172,
+     "std": 0.0066
+    },
+    "precision": {
+     "mean": 0.7217,
+     "std": 0.0134
+    },
+    "recall": {
+     "mean": 0.6982,
+     "std": 0.0073
+    },
+    "f1": {
+     "mean": 0.7096,
+     "std": 0.0031
+    },
+    "roc_auc": {
+     "mean": 0.7784,
+     "std": 0.0065
+    }
+   }
+  },
+  {
+   "name": "gradient_boosting",
+   "metrics": {
+    "accuracy": {
+     "mean": 0.736,
+     "std": 0.0075
+    },
+    "precision": {
+     "mean": 0.7513,
+     "std": 0.016
+    },
+    "recall": {
+     "mean": 0.6982,
+     "std": 0.0119
+    },
+    "f1": {
+     "mean": 0.7236,
+     "std": 0.0056
+    },
+    "roc_auc": {
+     "mean": 0.7947,
+     "std": 0.0053
+    }
+   }
+  }
+ ],
+ "usage": {
+  "predictions_total": 2,
+  "average_probability": 0.5181,
+  "by_risk_level": {
+   "LOW": 1,
+   "MODERATE": 0,
+   "HIGH": 1
+  },
+  "by_model_version": {
+   "gradient_boosting@2026-09-30T21:43:39.638512+00:00": 2
+  }
+ },
+ "note": null
+}

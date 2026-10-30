@@ -1,0 +1,356 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   CUSTOM GLOBAL STYLES
+   ============================================================================ */
+
+/* Root CSS Variables */
+:root {
+  --primary-50: #f0f9ff;
+  --primary-600: #0284c7;
+  --primary-700: #0369a1;
+  
+  --teal-500: #14b8a6;
+  --teal-600: #0d9488;
+  
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  
+  --neutral-50: #f9fafb;
+  --neutral-100: #f3f4f6;
+  --neutral-200: #e5e7eb;
+  --neutral-300: #d1d5db;
+  --neutral-600: #4b5563;
+  --neutral-700: #374151;
+  --neutral-900: #111827;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --neutral-50: #111827;
+    --neutral-100: #1f2937;
+    --neutral-200: #374151;
+    --neutral-300: #4b5563;
+    --neutral-600: #d1d5db;
+    --neutral-700: #e5e7eb;
+    --neutral-900: #f9fafb;
+  }
+}
+
+/* ============================================================================
+   TYPOGRAPHY
+   ============================================================================ */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-neutral-50 text-neutral-900 font-sans;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Typography utilities */
+.text-display-lg {
+  @apply text-4xl font-bold leading-tight;
+}
+
+.text-display-md {
+  @apply text-3xl font-bold leading-tight;
+}
+
+.text-display-sm {
+  @apply text-2xl font-bold leading-snug;
+}
+
+.text-heading-lg {
+  @apply text-2xl font-bold leading-snug;
+}
+
+.text-heading-md {
+  @apply text-xl font-semibold leading-snug;
+}
+
+.text-heading-sm {
+  @apply text-lg font-semibold leading-snug;
+}
+
+.text-body-lg {
+  @apply text-base font-normal leading-relaxed;
+}
+
+.text-body-md {
+  @apply text-sm font-normal leading-relaxed;
+}
+
+.text-body-sm {
+  @apply text-xs font-normal leading-relaxed;
+}
+
+/* ============================================================================
+   COMPONENTS
+   ============================================================================ */
+
+/* Cards */
+.card {
+  @apply bg-white rounded-xl shadow-md border border-neutral-200 p-6;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  @apply shadow-lg;
+}
+
+.card-interactive {
+  @apply cursor-pointer hover:shadow-lg hover:border-primary-600;
+}
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2.5 rounded-lg font-semibold transition-all duration-200;
+}
+
+.btn-primary {
+  @apply bg-primary-600 text-white hover:bg-primary-700 active:scale-95;
+}
+
+.btn-secondary {
+  @apply bg-neutral-200 text-neutral-900 hover:bg-neutral-300;
+}
+
+.btn-outline {
+  @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-50;
+}
+
+.btn-ghost {
+  @apply text-primary-600 hover:bg-primary-50;
+}
+
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.btn-lg {
+  @apply px-6 py-3 text-base;
+}
+
+.btn-sm {
+  @apply px-3 py-1.5 text-sm;
+}
+
+/* Input fields */
+.input {
+  @apply w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
+}
+
+.input::placeholder {
+  @apply text-neutral-500;
+}
+
+.input:disabled {
+  @apply bg-neutral-100 text-neutral-500 cursor-not-allowed;
+}
+
+.label {
+  @apply block text-sm font-semibold text-neutral-700 mb-2;
+}
+
+/* Forms */
+.form-group {
+  @apply mb-4;
+}
+
+.form-error {
+  @apply text-danger text-sm mt-1;
+}
+
+.form-hint {
+  @apply text-neutral-600 text-sm mt-1;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-danger {
+  @apply bg-red-100 text-red-800;
+}
+
+.badge-info {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.badge-neutral {
+  @apply bg-neutral-200 text-neutral-800;
+}
+
+/* Alerts */
+.alert {
+  @apply p-4 rounded-lg border-l-4;
+}
+
+.alert-success {
+  @apply border-l-green-500 bg-green-50 text-green-800;
+}
+
+.alert-warning {
+  @apply border-l-yellow-500 bg-yellow-50 text-yellow-800;
+}
+
+.alert-danger {
+  @apply border-l-red-500 bg-red-50 text-red-800;
+}
+
+.alert-info {
+  @apply border-l-blue-500 bg-blue-50 text-blue-800;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply inline-block animate-spin;
+}
+
+.spinner-primary {
+  @apply w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full;
+}
+
+/* Divider */
+.divider {
+  @apply border-t border-neutral-200;
+}
+
+.divider-horizontal {
+  @apply h-full w-px bg-neutral-200;
+}
+
+/* ============================================================================
+   LAYOUT UTILITIES
+   ============================================================================ */
+
+.container-max {
+  @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.section-padding {
+  @apply py-12 sm:py-16 lg:py-20;
+}
+
+.grid-cols-responsive {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-in-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-in-out;
+}
+
+/* ============================================================================
+   RESPONSIVE UTILITIES
+   ============================================================================ */
+
+/* Hide/Show on specific breakpoints */
+.sm-only {
+  @apply sm:hidden;
+}
+
+.md-up {
+  @apply hidden md:block;
+}
+
+.lg-up {
+  @apply hidden lg:block;
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neutral-50);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-400);
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

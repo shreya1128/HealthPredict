@@ -1,0 +1,5 @@
+# Development and testing dependencies only
+-r requirements.txt
+
+pypdf==6.20.1
+pip-audit==2.10.1

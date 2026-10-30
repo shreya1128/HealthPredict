@@ -1,0 +1,81 @@
+version: '3.9'
+
+# Production docker-compose example.
+# Copy this file to docker-compose.prod.yml and fill in secrets from a secure secret store.
+# Run with: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: healthpredict-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: healthpredict
+      MYSQL_USER: hp_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: healthpredict-api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      ENABLE_API_DOCS: "false"
+      COOKIE_SECURE: "true"
+      SEED_DEMO_DATA: "false"
+      APP_URL: ${APP_URL:-https://healthpredict.example.com}
+      DATABASE_URL: mysql+pymysql://hp_user:${MYSQL_PASSWORD}@db:3306/healthpredict
+      SECRET_KEY: ${SECRET_KEY}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      CORS_ORIGINS: ${APP_URL:-https://healthpredict.example.com}
+      ML_MODEL_PATH: /app/ml_models
+      EMAIL_BACKEND: smtp
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_TLS: "true"
+      SMTP_FROM: ${SMTP_FROM:-noreply@healthpredict.example.com}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml/saved_models:/app/ml_models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: healthpredict-web
+    restart: always
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+
+volumes:
+  db_data:

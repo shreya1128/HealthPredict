@@ -1,0 +1,86 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: healthpredict-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: healthpredict
+      MYSQL_USER: ${MYSQL_USER:-hp_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:3309:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: healthpredict-mail
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    logging:
+      driver: none
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: healthpredict-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "false"
+      SEED_DEMO_DATA: "false"
+      APP_URL: http://localhost:3000
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-hp_user}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}@db:3306/healthpredict
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env (min 32 chars)}
+      ADMIN_EMAIL: admin@healthpredict.local
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      DEMO_EMAIL: demo@healthpredict.local
+      DEMO_PASSWORD: ${DEMO_PASSWORD:?Set DEMO_PASSWORD in .env}
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
+      ML_MODEL_PATH: /app/ml_models
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_TLS: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml/saved_models:/app/ml_models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: healthpredict-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+volumes:
+  db_data:

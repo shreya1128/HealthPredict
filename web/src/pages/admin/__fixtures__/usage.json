@@ -1,0 +1,50 @@
+{
+ "days": 30,
+ "features": [
+  {
+   "feature": "Health assessments",
+   "records": 3,
+   "users": 3
+  },
+  {
+   "feature": "Exercise logs",
+   "records": 1,
+   "users": 1
+  },
+  {
+   "feature": "Sleep logs",
+   "records": 0,
+   "users": 0
+  },
+  {
+   "feature": "Hydration logs",
+   "records": 0,
+   "users": 0
+  },
+  {
+   "feature": "Nutrition logs",
+   "records": 0,
+   "users": 0
+  },
+  {
+   "feature": "Medicines added",
+   "records": 1,
+   "users": 1
+  },
+  {
+   "feature": "Goals created",
+   "records": 0,
+   "users": 0
+  },
+  {
+   "feature": "Weekly reports",
+   "records": 0,
+   "users": 0
+  }
+ ],
+ "medication_scheduled": 2,
+ "medication_taken": 1,
+ "medication_skipped": 0,
+ "medication_missed": 0,
+ "medication_adherence_percent": 50.0
+}

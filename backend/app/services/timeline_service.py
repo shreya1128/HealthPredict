@@ -1,0 +1,409 @@
+"""Unified Personal Health Timeline Service.
+
+Aggregates events across clinical assessments, ML predictions, vitals tracking,
+exercise, sleep, hydration, nutrition, symptoms, and medication intake
+into a unified chronological stream. Enforces profile scoping and data-source
+provenance labeling (MEASURED, SELF_REPORTED, CALCULATED, MODEL_ESTIMATE).
+"""
+
+from datetime import date, datetime, time, timezone
+from typing import Any, Dict, List, Optional
+from sqlalchemy import or_, select
+from sqlalchemy.orm import Session
+
+from app.middleware.profile_scope import ProfileScope
+from app.models.health import HealthAssessment, HealthHistory, HealthPrediction
+from app.models.tracking import ExerciseLog, HydrationLog, NutritionLog, SleepLog
+from app.models.emergency_and_symptoms import SymptomLog
+from app.models.medicine import Medicine, MedicineSchedule
+from app.models.diabetes import DiabetesScreening
+from app.models.menstrual import MenstrualLog
+from app.models.user import User
+
+
+def _get_scope_ids(target: User | ProfileScope) -> tuple[int, int, bool]:
+    if isinstance(target, ProfileScope):
+        is_primary = getattr(target.profile, "is_primary", True)
+        return target.owner_id, target.profile_id, is_primary
+    return target.id, target.id, True
+
+
+def get_health_timeline(
+    db: Session,
+    target: User | ProfileScope,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    categories: Optional[List[str]] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> Dict[str, Any]:
+    """Retrieve chronological health timeline events for the active profile."""
+    owner_id, profile_id, is_primary = _get_scope_ids(target)
+    items: List[Dict[str, Any]] = []
+
+    # Category normalization
+    selected_cats = {c.upper() for c in categories} if categories else None
+
+    # Helper for profile filtering
+    def profile_filter(col):
+        if is_primary:
+            return or_(col == profile_id, col.is_(None))
+        return col == profile_id
+
+    # 1. Health Assessments & Predictions
+    if not selected_cats or "ASSESSMENT" in selected_cats or "VITALS" in selected_cats:
+        q_ha = select(HealthAssessment).where(
+            HealthAssessment.user_id == owner_id,
+            profile_filter(HealthAssessment.care_profile_id),
+        )
+        if start_date:
+            q_ha = q_ha.where(HealthAssessment.assessment_date >= start_date)
+        if end_date:
+            q_ha = q_ha.where(HealthAssessment.assessment_date <= end_date)
+
+        assessments = db.scalars(q_ha).all()
+        for a in assessments:
+            created_dt = a.created_at or datetime.combine(a.assessment_date, time(8, 0))
+            if created_dt.tzinfo is None:
+                created_dt = created_dt.replace(tzinfo=timezone.utc)
+
+            vitals = {}
+            if a.systolic_bp and a.diastolic_bp:
+                vitals["blood_pressure"] = f"{a.systolic_bp}/{a.diastolic_bp} mmHg"
+            if a.heart_rate_bpm:
+                vitals["heart_rate"] = f"{a.heart_rate_bpm} bpm"
+            if a.blood_glucose_mg_dl:
+                vitals["blood_glucose"] = f"{a.blood_glucose_mg_dl} mg/dL"
+            if a.spo2_percent:
+                vitals["spo2"] = f"{float(a.spo2_percent)}%"
+            if a.temperature_celsius:
+                vitals["temperature"] = f"{float(a.temperature_celsius)} °C"
+
+            items.append({
+                "id": f"assessment-{a.id}",
+                "timestamp": created_dt.isoformat(),
+                "category": "ASSESSMENT",
+                "event_type": "CLINICAL_ASSESSMENT",
+                "title": f"Health Assessment ({a.risk_category or 'Standard'})",
+                "data_source": "MEASURED" if (a.systolic_bp or a.blood_glucose_mg_dl) else "SELF_REPORTED",
+                "health_score": float(a.health_score) if a.health_score is not None else None,
+                "risk_level": a.risk_category,
+                "values": vitals,
+                "notes": a.assessment_notes,
+            })
+
+            # Check for linked ML Prediction
+            pred = a.prediction
+            if pred and (not selected_cats or "PREDICTION" in selected_cats or "ASSESSMENT" in selected_cats):
+                items.append({
+                    "id": f"prediction-{pred.id}",
+                    "timestamp": created_dt.isoformat(),
+                    "category": "ASSESSMENT",
+                    "event_type": "AI_RISK_PREDICTION",
+                    "title": f"Cardiovascular Risk Estimate: {pred.risk_level}",
+                    "data_source": "MODEL_ESTIMATE",
+                    "risk_level": pred.risk_level,
+                    "probability": float(pred.prediction_score) if pred.prediction_score is not None else None,
+                    "model_version": pred.model_version,
+                    "values": {
+                        "top_factors": pred.prediction_factors or [],
+                    },
+                    "notes": pred.explanation_text or "Educational risk estimate generated by Scikit-learn Gradient Boosting model.",
+                })
+
+    # 1b. Diabetes Screenings (FINDRISC / ADA non-invasive screening)
+    if not selected_cats or "ASSESSMENT" in selected_cats or "DIABETES" in selected_cats:
+        q_diab = select(DiabetesScreening).where(
+            DiabetesScreening.user_id == owner_id,
+            profile_filter(DiabetesScreening.care_profile_id),
+        )
+        if start_date:
+            q_diab = q_diab.where(DiabetesScreening.screening_date >= start_date)
+        if end_date:
+            q_diab = q_diab.where(DiabetesScreening.screening_date <= end_date)
+
+        for ds in db.scalars(q_diab).all():
+            diab_dt = ds.created_at or datetime.combine(ds.screening_date, time(12, 0))
+            if diab_dt.tzinfo is None:
+                diab_dt = diab_dt.replace(tzinfo=timezone.utc)
+
+            clean_guidance = ds.clinical_guidance.split("\n")[0] if ds.clinical_guidance else ""
+
+            items.append({
+                "id": f"diab-{ds.id}",
+                "timestamp": diab_dt.isoformat(),
+                "category": "DIABETES_SCREENING",
+                "event_type": "NON_INVASIVE_RISK_SCORE",
+                "title": f"Diabetes Risk: {ds.risk_level.replace('_', ' ').title()} ({ds.total_score} pts)",
+                "data_source": "CALCULATED",
+                "values": {
+                    "total_score": ds.total_score,
+                    "risk_level": ds.risk_level,
+                    "probability": ds.risk_probability_text,
+                    "method": ds.method,
+                },
+                "notes": clean_guidance,
+            })
+
+    # 2. Exercise Logs
+    if not selected_cats or "EXERCISE" in selected_cats or "ACTIVITY" in selected_cats:
+        q_ex = select(ExerciseLog).where(
+            ExerciseLog.user_id == owner_id,
+            profile_filter(ExerciseLog.care_profile_id),
+        )
+        if start_date:
+            q_ex = q_ex.where(ExerciseLog.exercise_date >= start_date)
+        if end_date:
+            q_ex = q_ex.where(ExerciseLog.exercise_date <= end_date)
+
+        for ex in db.scalars(q_ex).all():
+            ex_dt = ex.created_at or datetime.combine(ex.exercise_date, time(12, 0))
+            if ex_dt.tzinfo is None:
+                ex_dt = ex_dt.replace(tzinfo=timezone.utc)
+
+            vals = {}
+            if ex.duration_minutes:
+                vals["duration"] = f"{ex.duration_minutes} min"
+            if ex.intensity:
+                vals["intensity"] = ex.intensity
+            if ex.calories_burned:
+                vals["calories"] = f"{ex.calories_burned} kcal"
+            if ex.distance_km:
+                vals["distance"] = f"{float(ex.distance_km)} km"
+
+            items.append({
+                "id": f"exercise-{ex.id}",
+                "timestamp": ex_dt.isoformat(),
+                "category": "EXERCISE",
+                "event_type": "PHYSICAL_ACTIVITY",
+                "title": f"Exercise: {ex.exercise_type}",
+                "data_source": "SELF_REPORTED" if ex.source == "manual" else "MEASURED",
+                "values": vals,
+                "notes": ex.notes,
+            })
+
+    # 3. Sleep Logs
+    if not selected_cats or "SLEEP" in selected_cats:
+        q_sl = select(SleepLog).where(
+            SleepLog.user_id == owner_id,
+            profile_filter(SleepLog.care_profile_id),
+        )
+        if start_date:
+            q_sl = q_sl.where(SleepLog.sleep_date >= start_date)
+        if end_date:
+            q_sl = q_sl.where(SleepLog.sleep_date <= end_date)
+
+        for sl in db.scalars(q_sl).all():
+            sl_dt = sl.created_at or datetime.combine(sl.sleep_date, time(7, 0))
+            if sl_dt.tzinfo is None:
+                sl_dt = sl_dt.replace(tzinfo=timezone.utc)
+
+            vals = {}
+            if sl.sleep_duration_hours is not None:
+                vals["duration"] = f"{float(sl.sleep_duration_hours)} hrs"
+            if sl.sleep_quality:
+                vals["quality_rating"] = f"{sl.sleep_quality}/5"
+            if sl.bedtime:
+                vals["bedtime"] = str(sl.bedtime)
+            if sl.wake_time:
+                vals["wake_time"] = str(sl.wake_time)
+
+            items.append({
+                "id": f"sleep-{sl.id}",
+                "timestamp": sl_dt.isoformat(),
+                "category": "SLEEP",
+                "event_type": "SLEEP_RECORD",
+                "title": f"Sleep Session ({float(sl.sleep_duration_hours or 0):.1f} hrs)",
+                "data_source": "SELF_REPORTED" if sl.source == "manual" else "MEASURED",
+                "values": vals,
+                "notes": sl.notes,
+            })
+
+    # 4. Hydration Logs
+    if not selected_cats or "HYDRATION" in selected_cats:
+        q_hy = select(HydrationLog).where(
+            HydrationLog.user_id == owner_id,
+            profile_filter(HydrationLog.care_profile_id),
+        )
+        if start_date:
+            q_hy = q_hy.where(HydrationLog.hydration_date >= start_date)
+        if end_date:
+            q_hy = q_hy.where(HydrationLog.hydration_date <= end_date)
+
+        for hy in db.scalars(q_hy).all():
+            hy_time = hy.entry_time or time(12, 0)
+            hy_dt = datetime.combine(hy.hydration_date, hy_time)
+            if hy_dt.tzinfo is None:
+                hy_dt = hy_dt.replace(tzinfo=timezone.utc)
+
+            items.append({
+                "id": f"hydration-{hy.id}",
+                "timestamp": hy_dt.isoformat(),
+                "category": "HYDRATION",
+                "event_type": "WATER_INTAKE",
+                "title": f"Water Intake ({hy.water_intake_ml} ml)",
+                "data_source": "SELF_REPORTED",
+                "values": {
+                    "water_ml": f"{hy.water_intake_ml} ml",
+                },
+                "notes": hy.notes,
+            })
+
+    # 5. Nutrition Logs
+    if not selected_cats or "NUTRITION" in selected_cats:
+        q_nu = select(NutritionLog).where(
+            NutritionLog.user_id == owner_id,
+            profile_filter(NutritionLog.care_profile_id),
+        )
+        if start_date:
+            q_nu = q_nu.where(NutritionLog.nutrition_date >= start_date)
+        if end_date:
+            q_nu = q_nu.where(NutritionLog.nutrition_date <= end_date)
+
+        for nu in db.scalars(q_nu).all():
+            nu_dt = nu.created_at or datetime.combine(nu.nutrition_date, time(13, 0))
+            if nu_dt.tzinfo is None:
+                nu_dt = nu_dt.replace(tzinfo=timezone.utc)
+
+            vals = {}
+            if nu.calories:
+                vals["calories"] = f"{nu.calories} kcal"
+            if nu.portion_size:
+                vals["portion"] = nu.portion_size
+            if nu.macros:
+                vals["macronutrients"] = nu.macros
+
+            items.append({
+                "id": f"nutrition-{nu.id}",
+                "timestamp": nu_dt.isoformat(),
+                "category": "NUTRITION",
+                "event_type": "MEAL_LOG",
+                "title": f"{nu.meal_type or 'Meal'}: {nu.food_item or 'Logged Food'}",
+                "data_source": "SELF_REPORTED",
+                "values": vals,
+                "notes": nu.notes,
+            })
+
+    # 6. Symptom Logs
+    if not selected_cats or "SYMPTOM" in selected_cats:
+        q_sy = select(SymptomLog).where(
+            SymptomLog.user_id == owner_id,
+            profile_filter(SymptomLog.care_profile_id),
+        )
+        if start_date:
+            q_sy = q_sy.where(SymptomLog.logged_at >= datetime.combine(start_date, time.min))
+        if end_date:
+            q_sy = q_sy.where(SymptomLog.logged_at <= datetime.combine(end_date, time.max))
+
+        for sy in db.scalars(q_sy).all():
+            sy_dt = sy.logged_at or sy.created_at
+            if sy_dt and sy_dt.tzinfo is None:
+                sy_dt = sy_dt.replace(tzinfo=timezone.utc)
+
+            vals = {
+                "severity": f"{sy.severity}/5",
+            }
+
+            items.append({
+                "id": f"symptom-{sy.id}",
+                "timestamp": sy_dt.isoformat(),
+                "category": "SYMPTOM",
+                "event_type": "SYMPTOM_ENTRY",
+                "title": f"Symptom: {sy.symptom_name} (Severity {sy.severity}/10)",
+                "data_source": "SELF_REPORTED",
+                "values": vals,
+                "notes": sy.notes,
+            })
+
+    # 7. Medication Intake Events
+    if not selected_cats or "MEDICATION" in selected_cats or "MEDICINE" in selected_cats:
+        q_med = (
+            select(MedicineSchedule, Medicine)
+            .join(Medicine, Medicine.id == MedicineSchedule.medicine_id)
+            .where(
+                Medicine.user_id == owner_id,
+                profile_filter(Medicine.care_profile_id),
+            )
+        )
+        if start_date:
+            q_med = q_med.where(MedicineSchedule.scheduled_date >= start_date)
+        if end_date:
+            q_med = q_med.where(MedicineSchedule.scheduled_date <= end_date)
+
+        for sched, med in db.execute(q_med).all():
+            action_dt = sched.taken_at or datetime.combine(sched.scheduled_date, sched.scheduled_time or time(9, 0))
+            if action_dt.tzinfo is None:
+                action_dt = action_dt.replace(tzinfo=timezone.utc)
+
+            status_label = "TAKEN" if sched.is_taken else ("SKIPPED" if sched.is_skipped else "PENDING")
+            if not sched.is_taken and not sched.is_skipped and sched.scheduled_date < date.today():
+                status_label = "MISSED"
+
+            items.append({
+                "id": f"meddose-{sched.id}",
+                "timestamp": action_dt.isoformat(),
+                "category": "MEDICATION",
+                "event_type": "DOSE_SCHEDULE",
+                "title": f"Medication: {med.medicine_name} ({status_label})",
+                "data_source": "SELF_REPORTED",
+                "values": {
+                    "medicine_name": med.medicine_name,
+                    "dosage": f"{float(med.dosage or 0):.1f} {med.dosage_unit or ''}".strip(),
+                    "status": status_label,
+                    "scheduled_time": str(sched.scheduled_time) if sched.scheduled_time else None,
+                },
+                "notes": sched.notes,
+            })
+
+    # 8. Menstrual Logs (Cycle & Period records)
+    if not selected_cats or "MENSTRUAL" in selected_cats or "CYCLE" in selected_cats:
+        q_mens = select(MenstrualLog).where(
+            MenstrualLog.user_id == owner_id,
+            profile_filter(MenstrualLog.care_profile_id),
+        )
+        if start_date:
+            q_mens = q_mens.where(MenstrualLog.period_start_date >= start_date)
+        if end_date:
+            q_mens = q_mens.where(MenstrualLog.period_start_date <= end_date)
+
+        for mens in db.scalars(q_mens).all():
+            mens_dt = mens.created_at or datetime.combine(mens.period_start_date, time(8, 0))
+            if mens_dt.tzinfo is None:
+                mens_dt = mens_dt.replace(tzinfo=timezone.utc)
+
+            flow_str = f", {mens.flow_intensity.capitalize()} flow" if mens.flow_intensity else ""
+            pain_str = f", Pain {mens.pain_level}/10" if mens.pain_level is not None else ""
+
+            items.append({
+                "id": f"menstrual-{mens.id}",
+                "timestamp": mens_dt.isoformat(),
+                "category": "MENSTRUAL_CYCLE",
+                "event_type": "PERIOD_RECORD",
+                "title": f"Period Log ({mens.period_duration_days or 1} days{flow_str})",
+                "data_source": "SELF_REPORTED",
+                "values": {
+                    "start_date": mens.period_start_date.isoformat(),
+                    "end_date": mens.period_end_date.isoformat() if mens.period_end_date else None,
+                    "duration_days": mens.period_duration_days,
+                    "cycle_length_days": mens.cycle_length_days,
+                    "flow_intensity": mens.flow_intensity,
+                    "pain_level": mens.pain_level,
+                    "symptoms": mens.symptoms,
+                },
+                "notes": mens.notes or f"Period tracked on {mens.period_start_date}{pain_str}.",
+            })
+
+    # Sort all events chronologically descending (newest first)
+    items.sort(key=lambda x: x["timestamp"], reverse=True)
+
+    total_count = len(items)
+    paginated_items = items[offset : offset + limit]
+
+    return {
+        "profile_id": profile_id,
+        "is_primary": is_primary,
+        "total_events": total_count,
+        "limit": limit,
+        "offset": offset,
+        "events": paginated_items,
+    }

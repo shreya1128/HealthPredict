@@ -1,0 +1,90 @@
+{
+  "logistic_regression": {
+    "accuracy": {
+      "mean": 0.732,
+      "std": 0.0025
+    },
+    "precision": {
+      "mean": 0.753,
+      "std": 0.0121
+    },
+    "recall": {
+      "mean": 0.6831,
+      "std": 0.0152
+    },
+    "f1": {
+      "mean": 0.7161,
+      "std": 0.0033
+    },
+    "roc_auc": {
+      "mean": 0.792,
+      "std": 0.0061
+    }
+  },
+  "decision_tree": {
+    "accuracy": {
+      "mean": 0.6423,
+      "std": 0.0066
+    },
+    "precision": {
+      "mean": 0.6399,
+      "std": 0.0038
+    },
+    "recall": {
+      "mean": 0.6339,
+      "std": 0.0204
+    },
+    "f1": {
+      "mean": 0.6367,
+      "std": 0.0116
+    },
+    "roc_auc": {
+      "mean": 0.6423,
+      "std": 0.0067
+    }
+  },
+  "random_forest": {
+    "accuracy": {
+      "mean": 0.7172,
+      "std": 0.0066
+    },
+    "precision": {
+      "mean": 0.7217,
+      "std": 0.0134
+    },
+    "recall": {
+      "mean": 0.6982,
+      "std": 0.0073
+    },
+    "f1": {
+      "mean": 0.7096,
+      "std": 0.0031
+    },
+    "roc_auc": {
+      "mean": 0.7784,
+      "std": 0.0065
+    }
+  },
+  "gradient_boosting": {
+    "accuracy": {
+      "mean": 0.736,
+      "std": 0.0075
+    },
+    "precision": {
+      "mean": 0.7513,
+      "std": 0.016
+    },
+    "recall": {
+      "mean": 0.6982,
+      "std": 0.0119
+    },
+    "f1": {
+      "mean": 0.7236,
+      "std": 0.0056
+    },
+    "roc_auc": {
+      "mean": 0.7947,
+      "std": 0.0053
+    }
+  }
+}
