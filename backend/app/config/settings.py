@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/healthpredict"
     DB_ECHO: bool = False
+    DB_SSL_CA: str = ""
 
     # Security. No usable default: production must set it; development gets an ephemeral key.
     SECRET_KEY: str = ""

@@ -16,8 +16,18 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 _engine_kwargs: dict = {"echo": settings.DB_ECHO, "pool_pre_ping": True}
+
 if not settings.DATABASE_URL.startswith("sqlite"):
-    _engine_kwargs.update(pool_size=10, max_overflow=20, pool_recycle=3600)
+    _engine_kwargs.update(
+        pool_size=10,
+        max_overflow=20,
+        pool_recycle=3600
+    )
+
+if settings.DB_SSL_CA:
+    _engine_kwargs["connect_args"] = {
+        "ssl": {"ca": settings.DB_SSL_CA}
+    }
 
 engine = create_engine(settings.DATABASE_URL, **_engine_kwargs)
 
